@@ -3,22 +3,13 @@
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using CleanArchitecture.Common.Interfaces;
     using MediatR;
 
     public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     {
         private readonly Stopwatch timer;
-        private readonly ICurrentUserService currentUserService;
-        private readonly IIdentityService identityService;
 
-        public PerformanceBehaviour(ICurrentUserService currentUserService, IIdentityService identityService)
-        {
-            this.timer = new Stopwatch();
-
-            this.currentUserService = currentUserService;
-            this.identityService = identityService;
-        }
+        public PerformanceBehaviour() => this.timer = new Stopwatch();
 
         public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
         {
@@ -32,16 +23,7 @@
 
             if (elapsedMilliseconds > 500)
             {
-                var requestName = typeof(TRequest).Name;
-                var userId = this.currentUserService.UserId ?? string.Empty;
-                var userName = string.Empty;
-
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    userName = await this.identityService.GetUserNameAsync(userId);
-                }
-
-                Logging.Logging.LogInfo($"CleanArchitecture Long Running Request: {requestName} ({elapsedMilliseconds} milliseconds) {userId} {userName}", request);
+                Logging.Logging.LogInfo($"CleanArchitecture Long Running Request: {typeof(TRequest).Name} ({elapsedMilliseconds} milliseconds)k", request);
             }
 
             return response;
